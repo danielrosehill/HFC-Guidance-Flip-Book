@@ -21,6 +21,7 @@ A visual, landscape-format flip book walkthrough of Israel Home Front Command (H
 typst/          Typst source file
 output/         Compiled PDF
 images/         Local image assets
+viewer/         Interactive flip-book viewer (HTML)
 ```
 
 The guide references illustrations from the companion [Israel Wartime Prep Guide](https://github.com/danielrosehill/Israel-Wartime-Prep-Guide) repository.
@@ -32,6 +33,37 @@ Requires [Typst](https://typst.app/) and the sibling `Israel-Wartime-Prep-Guide`
 ```bash
 typst compile --root ~/repos typst/flip-book.typ output/flip-book.pdf
 ```
+
+## Interactive Viewer
+
+The `viewer/` directory contains a self-hosted flip-book viewer that renders PDFs with a page-turning effect using PDF.js and StPageFlip. No build step required — it's a single HTML file.
+
+**Local preview:**
+
+```bash
+cd viewer && python3 -m http.server 8080
+# Open http://localhost:8080
+```
+
+**Load any PDF via query parameter:**
+
+```
+viewer/index.html?pdf=https://example.com/any-document.pdf
+```
+
+**Embed on any site via iframe:**
+
+```html
+<iframe
+  src="https://your-domain.com/viewer/?pdf=/path/to/document.pdf"
+  width="100%"
+  height="700"
+  style="border: none;"
+  allowfullscreen>
+</iframe>
+```
+
+Supports keyboard navigation (arrow keys, Home/End), touch/swipe, and fullscreen.
 
 ## Authors
 

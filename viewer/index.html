@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF Flip Book Viewer</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #1a1a2e;
+      color: #e0e0e0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    #loading {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #1a1a2e;
+      z-index: 100;
+      transition: opacity 0.4s;
+    }
+    #loading.hidden { opacity: 0; pointer-events: none; }
+
+    .spinner {
+      width: 48px; height: 48px;
+      border: 4px solid rgba(255,255,255,0.1);
+      border-top-color: #6c63ff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    #loading p {
+      margin-top: 16px;
+      font-size: 14px;
+      color: #888;
+    }
+
+    #error {
+      display: none;
+      position: absolute;
+      inset: 0;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #1a1a2e;
+      z-index: 100;
+      text-align: center;
+      padding: 24px;
+    }
+    #error.visible { display: flex; }
+    #error h2 { color: #ff6b6b; margin-bottom: 8px; }
+    #error p { color: #888; max-width: 400px; }
+
+    #viewer-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      width: 100%;
+      padding: 16px;
+    }
+
+    .flip-book {
+      background: transparent;
+    }
+
+    .page {
+      background: white;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .page canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .page-cover {
+      background: linear-gradient(135deg, #2d2d5e, #1a1a2e);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #e0e0e0;
+      font-size: 18px;
+      text-align: center;
+      padding: 24px;
+    }
+
+    #controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 24px;
+      background: rgba(0,0,0,0.3);
+      border-radius: 12px;
+      margin-bottom: 16px;
+      backdrop-filter: blur(8px);
+    }
+
+    #controls button {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #e0e0e0;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    #controls button:hover { background: rgba(255,255,255,0.2); }
+    #controls button:disabled { opacity: 0.3; cursor: default; }
+
+    #page-info {
+      font-size: 14px;
+      color: #aaa;
+      min-width: 80px;
+      text-align: center;
+    }
+
+    .nav-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #e0e0e0;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+      z-index: 10;
+    }
+    .nav-arrow:hover { background: rgba(0,0,0,0.6); }
+    .nav-arrow:disabled { opacity: 0.2; cursor: default; }
+    #prev-arrow { left: 8px; }
+    #next-arrow { right: 8px; }
+
+    :fullscreen body,
+    :-webkit-full-screen body {
+      background: #111;
+    }
+
+    @media (max-width: 600px) {
+      #controls { gap: 6px; padding: 8px 12px; }
+      #controls button { padding: 6px 10px; font-size: 12px; }
+      .nav-arrow { width: 36px; height: 36px; font-size: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="loading">
+    <div class="spinner"></div>
+    <p id="loading-text">Loading PDF...</p>
+  </div>
+
+  <div id="error">
+    <h2>Could not load PDF</h2>
+    <p id="error-text">Please check the URL and try again.</p>
+  </div>
+
+  <div id="viewer-container">
+    <button class="nav-arrow" id="prev-arrow" disabled>&#8249;</button>
+    <div id="flip-book"></div>
+    <button class="nav-arrow" id="next-arrow">&#8250;</button>
+  </div>
+
+  <div id="controls">
+    <button id="prev-btn" disabled>&#8249; Prev</button>
+    <span id="page-info">Loading...</span>
+    <button id="next-btn">Next &#8250;</button>
+    <button id="fullscreen-btn" title="Fullscreen">&#x26F6;</button>
+  </div>
+
+  <!-- PDF.js from Mozilla CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.9.155/pdf.min.mjs" type="module"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.9.155/pdf.worker.min.mjs" type="module"></script>
+
+  <script type="module">
+    // ── PDF.js setup ──
+    const pdfjsLib = await import('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.9.155/pdf.min.mjs');
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.9.155/pdf.worker.min.mjs';
+
+    // ── StPageFlip (loaded dynamically) ──
+    const pageFlipModule = await loadScript('https://unpkg.com/page-flip@2.0.7/dist/js/page-flip.browser.js');
+
+    function loadScript(src) {
+      return new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = src;
+        s.onload = resolve;
+        s.onerror = reject;
+        document.head.appendChild(s);
+      });
+    }
+
+    // ── Config ──
+    const params = new URLSearchParams(window.location.search);
+    const pdfUrl = params.get('pdf') || './flip-book-web.pdf';
+    const RENDER_SCALE = 2; // Higher = sharper pages
+
+    const loadingEl = document.getElementById('loading');
+    const loadingText = document.getElementById('loading-text');
+    const errorEl = document.getElementById('error');
+    const errorText = document.getElementById('error-text');
+    const flipBookEl = document.getElementById('flip-book');
+    const pageInfo = document.getElementById('page-info');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const prevArrow = document.getElementById('prev-arrow');
+    const nextArrow = document.getElementById('next-arrow');
+    const fullscreenBtn = document.getElementById('fullscreen-btn');
+
+    let book = null;
+    let totalPages = 0;
+
+    try {
+      loadingText.textContent = 'Loading PDF...';
+      const pdf = await pdfjsLib.getDocument(pdfUrl).promise;
+      totalPages = pdf.numPages;
+
+      // Get dimensions from first page
+      const firstPage = await pdf.getPage(1);
+      const viewport = firstPage.getViewport({ scale: 1 });
+      const aspectRatio = viewport.width / viewport.height;
+
+      // Calculate display size based on available space
+      const maxHeight = window.innerHeight - 120;
+      const maxWidth = window.innerWidth - 100;
+      let pageHeight = Math.min(maxHeight, 700);
+      let pageWidth = pageHeight * aspectRatio;
+
+      // For landscape PDFs in double-page spread, each "page" is one PDF page
+      if (pageWidth * 2 > maxWidth) {
+        pageWidth = maxWidth / 2;
+        pageHeight = pageWidth / aspectRatio;
+      }
+
+      // Render all pages to canvases
+      loadingText.textContent = `Rendering ${totalPages} pages...`;
+      const pages = [];
+
+      for (let i = 1; i <= totalPages; i++) {
+        loadingText.textContent = `Rendering page ${i} of ${totalPages}...`;
+        const page = await pdf.getPage(i);
+        const scale = (pageWidth * RENDER_SCALE) / viewport.width;
+        const vp = page.getViewport({ scale });
+
+        const canvas = document.createElement('canvas');
+        canvas.width = vp.width;
+        canvas.height = vp.height;
+        const ctx = canvas.getContext('2d');
+        await page.render({ canvasContext: ctx, viewport: vp }).promise;
+
+        const div = document.createElement('div');
+        div.className = 'page';
+        div.setAttribute('data-density', 'hard');
+        if (i === 1 || i === totalPages) {
+          div.classList.add('page-cover');
+        }
+        div.appendChild(canvas);
+        pages.push(div);
+      }
+
+      // Add pages to DOM
+      pages.forEach(p => flipBookEl.appendChild(p));
+
+      // Initialize PageFlip
+      book = new St.PageFlip(flipBookEl, {
+        width: Math.round(pageWidth),
+        height: Math.round(pageHeight),
+        size: 'stretch',
+        maxShadowOpacity: 0.5,
+        showCover: true,
+        mobileScrollSupport: true,
+        swipeDistance: 30,
+        usePortrait: true,
+        flippingTime: 800,
+        drawShadow: true,
+        autoSize: true,
+      });
+
+      book.loadFromHTML(document.querySelectorAll('#flip-book .page'));
+
+      // Update UI
+      function updateControls() {
+        const current = book.getCurrentPageIndex();
+        const total = book.getPageCount();
+        const spread = book.getCurrentPageIndex();
+        pageInfo.textContent = `${current + 1} / ${total}`;
+        prevBtn.disabled = current === 0;
+        nextBtn.disabled = current >= total - 1;
+        prevArrow.disabled = current === 0;
+        nextArrow.disabled = current >= total - 1;
+      }
+
+      book.on('flip', updateControls);
+      updateControls();
+
+      // Button handlers
+      prevBtn.addEventListener('click', () => book.flipPrev());
+      nextBtn.addEventListener('click', () => book.flipNext());
+      prevArrow.addEventListener('click', () => book.flipPrev());
+      nextArrow.addEventListener('click', () => book.flipNext());
+
+      // Keyboard navigation
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { book.flipPrev(); }
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { book.flipNext(); }
+        if (e.key === 'Home') { book.turnToPage(0); }
+        if (e.key === 'End') { book.turnToPage(totalPages - 1); }
+      });
+
+      // Fullscreen
+      fullscreenBtn.addEventListener('click', () => {
+        if (document.fullscreenElement) {
+          document.exitFullscreen();
+        } else {
+          document.documentElement.requestFullscreen();
+        }
+      });
+
+      // Handle resize
+      let resizeTimeout;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => book.update(), 200);
+      });
+
+      // Hide loading
+      loadingEl.classList.add('hidden');
+      setTimeout(() => loadingEl.remove(), 500);
+
+    } catch (err) {
+      console.error('Flip book error:', err);
+      loadingEl.classList.add('hidden');
+      errorText.textContent = err.message || 'Failed to load the PDF.';
+      errorEl.classList.add('visible');
+    }
+  </script>
+</body>
+</html>
