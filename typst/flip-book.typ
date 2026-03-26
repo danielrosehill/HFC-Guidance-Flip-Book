@@ -233,35 +233,62 @@
 
 
 // ══════════════════════════════════════════════
-// PAGE 4 — SHELTER PRIORITY
+// PAGE 4 — SHELTER PRIORITY (FLOWCHART)
 // ══════════════════════════════════════════════
-#flip-page(
-  bg-colour: white,
-  accent: navy,
-  image-path: img + "which-shelter.png",
-  image-side: left,
-  icon: [🛡],
-  title: [Shelter Priority],
-  body-content: [
-    Not all shelters are equal. Use the *best available option*:
-
-    #v(0.2cm)
-    *1. Mamad* (ממ"ד) — your apartment's safe room. Best protection.
-
-    *2. Mamak* (מממ"ק) — floor-level shared safe room in a building.
-
-    *3. Building shelter* (מקלט) — basement or ground-floor communal shelter.
-
-    *4. Internal stairwell* — if no safe room. Stay below 3rd floor, away from windows.
-
-    *5. Inner room* — no windows, furthest from exterior walls.
-
-    #v(0.2cm)
-    #block(fill: soft-blue, radius: 8pt, inset: 10pt)[
-      #text(weight: "bold", fill: navy, size: 13pt)[Know your nearest 3 shelters] — home, work, and your regular route.
+#{
+  page(fill: white, margin: (top: 0.8cm, bottom: 0.8cm, left: 2cm, right: 2cm))[
+    #align(center)[
+      #text(size: 24pt, weight: "bold", fill: navy)[🛡 Where Do I Shelter?]
+      #v(0.1cm)
+      #text(size: 11pt, fill: grey)[Use the *best available* option. Work down until you find one you can reach.]
     ]
-  ],
-)
+    #v(0.2cm)
+    #align(center)[
+      #block(fill: rgb("#1a5c3a"), radius: 8pt, inset: (x: 1cm, y: 0.28cm), width: 60%)[
+        #align(center)[
+          #text(size: 13pt, weight: "bold", fill: white)[1. Mamad (ממ"ד)] #h(0.3cm) #text(size: 10.5pt, fill: rgb("#c8e6c9"))[Safe room — best protection]
+        ]
+      ]
+      #text(size: 12pt, fill: navy)[▼]
+      #block(fill: rgb("#27774e"), radius: 8pt, inset: (x: 1cm, y: 0.28cm), width: 60%)[
+        #align(center)[
+          #text(size: 13pt, weight: "bold", fill: white)[2. Mamak (מממ"ק)] #h(0.3cm) #text(size: 10.5pt, fill: rgb("#c8e6c9"))[Shared safe room in building]
+        ]
+      ]
+      #text(size: 12pt, fill: navy)[▼]
+      #block(fill: rgb("#2563a0"), radius: 8pt, inset: (x: 1cm, y: 0.28cm), width: 60%)[
+        #align(center)[
+          #text(size: 13pt, weight: "bold", fill: white)[3. Public Shelter (מקלט)]
+          #v(0.05cm)
+          #text(size: 10pt, fill: rgb("#a0c4e8"))[Check it's open · Never an unapproved parking garage]
+        ]
+      ]
+      #text(size: 12pt, fill: navy)[▼]
+      #block(fill: rgb("#e67e22"), radius: 8pt, inset: (x: 1cm, y: 0.28cm), width: 60%)[
+        #align(center)[
+          #text(size: 13pt, weight: "bold", fill: white)[4. Internal Stairwell]
+          #v(0.05cm)
+          #text(size: 10pt, fill: rgb("#fef3e2"))[No windows/external walls · 3+ floors: 2 above you · Under 3: middle floor]
+        ]
+      ]
+      #text(size: 12pt, fill: navy)[▼]
+      #block(fill: rgb("#c0392b"), radius: 8pt, inset: (x: 1cm, y: 0.28cm), width: 60%)[
+        #align(center)[
+          #text(size: 13pt, weight: "bold", fill: white)[5. Inner Room] #h(0.3cm) #text(size: 10.5pt, fill: rgb("#fde8e8"))[Furthest from exterior walls, fewest windows]
+        ]
+      ]
+    ]
+    #v(0.2cm)
+    #align(center)[
+      #block(fill: soft-blue, radius: 8pt, inset: 8pt, width: 60%)[
+        #text(weight: "bold", fill: navy, size: 11pt)[Know your nearest 3 shelters] — home, work, and your regular route.
+      ]
+    ]
+    #place(bottom + right, dx: -0.8cm, dy: -0.4cm)[
+      #text(size: 9pt, fill: navy.lighten(40%))[#context counter(page).display()]
+    ]
+  ]
+}
 
 
 // ══════════════════════════════════════════════
@@ -279,14 +306,47 @@
 
     *Download it now* — don't wait for an emergency.
 
-    *Set it up:*
-    - Turn on *location services*
-    - Enable *notifications* and *sound override*
-    - Add up to *10 areas of interest*
+    *Critical settings — check every one:*
+    - *Location services* → *On* (this is essential — alerts depend on it)
+    - *Notifications* → *On*
+    - *Display over other apps* → *On*
+    - *"Pause if unsured"* → *Disabled*
+    - *Background battery optimisation* → *Unrestricted*
+    - Add up to *10 areas of interest* (home, work, family)
+    - iPhone users: make sure the phone is *not on silent*
 
-    #v(0.2cm)
     #block(fill: white, radius: 8pt, inset: 10pt)[
-      #text(weight: "bold", fill: sky, size: 13pt)[The app alerts you based on your location] — more targeted than the siren.
+      #text(weight: "bold", fill: sky, size: 13pt)[Without location services, the app cannot alert you.] This is the single most important setting.
+    ]
+  ],
+)
+
+
+// ══════════════════════════════════════════════
+// PAGE 5b — PHONE & WIRELESS ALERTS
+// ══════════════════════════════════════════════
+#flip-page(
+  bg-colour: white,
+  accent: navy,
+  image-path: img + "red-alert-on-couchj.png",
+  image-side: left,
+  icon: [📶],
+  title: [Your Phone Is A Lifeline],
+  body-content: [
+    Your phone receives alerts through *three systems*:
+
+    *1. HFC App* — location-based, most targeted \
+    *2. Cell Broadcast (CB)* — direct message to all phones in the area \
+    *3. Siren* — the audible outdoor warning
+
+    *Phone rules during an active threat:*
+    - *Never put your phone in airplane mode*
+    - *Do Not Disturb* → configure *override for emergencies*
+    - Keep it *charged* and *on your person*
+    - *Sleep mode / silent* → alerts must still sound
+
+    #block(fill: soft-blue, radius: 8pt, inset: 10pt)[
+      #text(weight: "bold", fill: navy, size: 13pt)[A phone in airplane mode receives no alerts.] This is not a drill — it could cost your life.
     ]
   ],
 )
@@ -325,10 +385,11 @@
     Time between siren and impact depends on *where you are*.
 
     *Typical times:*
-    - Gaza border: *15 seconds*
-    - Central Israel: *60–90 seconds*
-    - Northern Israel: *30–60 seconds*
-    - Yemen / long-range: *3–5 min advance warning*, then siren
+    - Border areas: *15 seconds* (some locations: *immediate*)
+    - Most of Israel: *90 seconds*
+    - Long-range threats: *advance warning*, then siren
+
+    Israel is divided into *1,700 alert areas*, each with a defined defence time. Check yours on the HFC website.
 
     #v(0.2cm)
     #block(fill: red-light, radius: 8pt, inset: 10pt)[
@@ -336,6 +397,76 @@
     ]
   ],
 )
+
+
+// ══════════════════════════════════════════════
+// PAGE 7b — CAUGHT OUTSIDE / ON TRANSPORT
+// ══════════════════════════════════════════════
+#{
+  page(fill: white, margin: (top: 1.5cm, bottom: 1.5cm, left: 2.5cm, right: 2.5cm))[
+    #text(size: 28pt, weight: "bold", fill: red-alert)[🚗 Caught Outside?]
+    #v(0.5cm)
+    #grid(
+      columns: (1fr, 1fr),
+      column-gutter: 2cm,
+      [
+        #text(size: 16pt, weight: "bold", fill: navy)[On Foot]
+        #v(0.3cm)
+        #set text(size: 13pt, fill: grey)
+        #set par(leading: 0.7em)
+        Enter the *nearest building* and find a shelter or stairwell.
+
+        *No building nearby?* \
+        Lie flat on the ground, face down. \
+        Protect your head with your hands.
+
+        Shrapnel flies diagonally upward — the lower you are, the safer.
+
+        #v(0.6cm)
+        #text(size: 16pt, weight: "bold", fill: navy)[In a Private Vehicle]
+        #v(0.3cm)
+        #set text(size: 13pt, fill: grey)
+        Pull over carefully. \
+        *Exit the vehicle.* \
+        Move beyond the shoulder or safety barrier. \
+        Lie flat, protect your head.
+
+        _Your car is not a shelter._
+      ],
+      [
+        #text(size: 16pt, weight: "bold", fill: navy)[On a Bus (City)]
+        #v(0.3cm)
+        #set text(size: 13pt, fill: grey)
+        #set par(leading: 0.7em)
+        Driver pulls over and opens doors. \
+        Exit and reach a shelter if possible. \
+        If not: *crouch below the window line*, protect your head.
+
+        #v(0.5cm)
+        #text(size: 16pt, weight: "bold", fill: navy)[On a Bus (Intercity)]
+        #v(0.3cm)
+        #set text(size: 13pt, fill: grey)
+        Driver pulls over and opens doors. \
+        *Bend below the window line.* \
+        Protect your head with your hands.
+
+        #v(0.5cm)
+        #text(size: 16pt, weight: "bold", fill: navy)[On a Train / Light Rail]
+        #v(0.3cm)
+        #set text(size: 13pt, fill: grey)
+        Train slows to 30 km/h. \
+        *Crouch below the window line.* \
+        Protect your head. \
+        At next station: exit and enter shelter.
+
+        _Underground? Stay in the carriage._
+      ],
+    )
+    #place(bottom + right, dx: 0cm, dy: 0cm)[
+      #text(size: 9pt, fill: red-alert.lighten(40%))[#context counter(page).display()]
+    ]
+  ]
+}
 
 
 // ══════════════════════════════════════════════
